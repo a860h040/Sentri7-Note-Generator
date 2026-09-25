@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentri7 Note Generator</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#17202a}
+    #frame{display:none;width:100%;height:100%;border:0;background:white}
+    #setup{
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .card{
+      width:min(560px,100%);
+      background:white;
+      border:1px solid #d9dee5;
+      border-radius:12px;
+      padding:18px;
+      box-shadow:0 8px 28px rgba(16,24,40,.08);
+    }
+    h1{font-size:20px;margin:0 0 8px}
+    p{font-size:13px;line-height:1.5;color:#5d6875;margin:0 0 14px}
+    label{display:block;font-size:12px;font-weight:700;margin:0 0 6px}
+    input{
+      width:100%;
+      height:40px;
+      border:1px solid #cfd5dc;
+      border-radius:7px;
+      padding:8px 10px;
+      font-size:13px;
+      outline:none;
+    }
+    input:focus{border-color:#7da3d3;box-shadow:0 0 0 2px rgba(47,95,159,.1)}
+    .row{display:flex;gap:8px;margin-top:10px}
+    button{
+      height:38px;
+      border:0;
+      border-radius:7px;
+      padding:0 14px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .primary{background:#2f5f9f;color:white}
+    .secondary{background:#eef2f6;color:#253241}
+    #error{font-size:12px;color:#b42318;min-height:16px;margin-top:8px}
+    #toolbar{
+      display:none;
+      position:fixed;
+      right:8px;
+      bottom:8px;
+      z-index:10;
+    }
+    #toolbar button{
+      height:30px;
+      padding:0 9px;
+      font-size:11px;
+      background:rgba(255,255,255,.92);
+      color:#46515d;
+      border:1px solid #d9dee5;
+      box-shadow:0 2px 8px rgba(16,24,40,.08);
+    }
+  </style>
+</head>
+<body>
+  <div id="setup">
+    <div class="card">
+      <h1>Connect Sentri7 Note Generator</h1>
+      <p>Paste your Google Apps Script Web App URL ending in <strong>/exec</strong>. You only need to do this once on this browser. The Gemini API key stays securely in Apps Script.</p>
+      <label for="appUrl">Apps Script Web App URL</label>
+      <input id="appUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+      <div class="row">
+        <button id="saveBtn" class="primary">Open App</button>
+        <button id="clearBtn" class="secondary" type="button">Clear saved URL</button>
+      </div>
+      <div id="error"></div>
+    </div>
+  </div>
+
+  <iframe id="frame" title="Sentri7 Note Generator" allow="clipboard-write"></iframe>
+
+  <div id="toolbar">
+    <button id="changeBtn" type="button">Change app URL</button>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'sentri7_apps_script_url';
+    const setup = document.getElementById('setup');
+    const frame = document.getElementById('frame');
+    const toolbar = document.getElementById('toolbar');
+    const appUrl = document.getElementById('appUrl');
+    const error = document.getElementById('error');
+
+    function validUrl(value) {
+      try {
+        const u = new URL(value);
+        return u.protocol === 'https:' &&
+          u.hostname === 'script.google.com' &&
+          /\/macros\/s\/[^/]+\/exec\/?$/.test(u.pathname);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function openApp(value) {
+      const url = String(value || '').trim();
+      if (!validUrl(url)) {
+        error.textContent = 'Enter the Google Apps Script Web App URL that ends in /exec.';
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, url);
+      error.textContent = '';
+      frame.src = url;
+      setup.style.display = 'none';
+      frame.style.display = 'block';
+      toolbar.style.display = 'block';
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', function() {
+      openApp(appUrl.value);
+    });
+
+    appUrl.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') openApp(appUrl.value);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function() {
+      localStorage.removeItem(STORAGE_KEY);
+      appUrl.value = '';
+      error.textContent = '';
+    });
+
+    document.getElementById('changeBtn').addEventListener('click', function() {
+      frame.src = 'about:blank';
+      frame.style.display = 'none';
+      toolbar.style.display = 'none';
+      setup.style.display = 'flex';
+      appUrl.value = localStorage.getItem(STORAGE_KEY) || '';
+      appUrl.focus();
+    });
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && validUrl(saved)) {
+      openApp(saved);
+    } else {
+      appUrl.value = saved || '';
+    }
+  </script>
+</body>
+</html>
