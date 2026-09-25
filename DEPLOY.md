@@ -1,32 +1,31 @@
-# Sentri7 Note Generator
+# Sentri7 Note Generator Deployment
 
-The app now runs directly from GitHub Pages.
+## Live URL
 
-Live app:
+Use this as the normal app link:
 
 `https://a860h040.github.io/Sentri7-Note-Generator/`
 
-## First use
+GitHub Pages opens the current Google Apps Script web app directly.
 
-1. Open the live app.
-2. Paste your Gemini API key when prompted.
-3. The key is stored only in that browser's local storage.
-4. Search for a medication or Sentri7 rule, choose the note type, complete the required fields, and generate the final comment.
+## Current Apps Script backend
 
-## No Google Apps Script or Google Sheet
+`https://script.google.com/macros/s/AKfycbzFHzycCuJlcSDkzyBimPLzoDEY3mG6SVzecQuF3dfddcHG1P-SDZLhrfIdS1ZHuqKl/exec`
 
-This version does not use Google Apps Script and does not use Google Sheets.
+No Google Sheet is used.
 
-The Sentri7 rule library is stored in:
+## Gemini API key
 
-`data/sentri7-rules.json`
+Keep the Gemini API key only in:
 
-The page calls the Gemini API directly from the browser.
+**Apps Script → Project Settings → Script properties**
 
-## Security
+Property:
 
-The repository is public. Never commit API keys, patient information, or generated notes.
+`GEMINI_API_KEY`
 
-The saved Gemini key remains in the browser and can be removed with the **API Key** button in the lower-right corner.
+Do not commit the key to GitHub.
 
-Only use patient-identifiable information if your organization has approved sending it to the Gemini API.
+## If the Apps Script deployment URL changes
+
+Update the iframe `src` in GitHub's lowercase `index.html` to the new `/exec` URL. GitHub Pages will redeploy automatically.
