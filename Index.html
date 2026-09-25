@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root{
+      --bg:#f4f6f8;--card:#fff;--line:#d9dee5;--text:#17202a;
+      --muted:#68727d;--accent:#2f5f9f;--danger:#b42318
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:Arial,Helvetica,sans-serif;font-size:13px
+    }
+    .wrap{width:min(980px,calc(100% - 20px));margin:12px auto}
+    .card{
+      background:var(--card);border:1px solid var(--line);
+      border-radius:9px;padding:10px;margin-bottom:9px
+    }
+    .top{
+      display:grid;grid-template-columns:minmax(280px,1.4fr) minmax(190px,.6fr);
+      gap:8px;align-items:end
+    }
+    label{
+      display:block;font-size:10.5px;font-weight:700;color:#4c5662;
+      margin:0 0 3px 1px
+    }
+    input,select,textarea,button{font:inherit}
+    input[type="text"],select{
+      width:100%;height:32px;border:1px solid #cfd5dc;border-radius:6px;
+      background:#fff;padding:5px 8px;outline:none
+    }
+    input:focus,select:focus,textarea:focus{
+      border-color:#7da3d3;box-shadow:0 0 0 2px rgba(47,95,159,.1)
+    }
+    .control{position:relative}
+    .suggestions{
+      position:absolute;left:0;right:0;top:52px;background:#fff;
+      border:1px solid #cfd5dc;border-radius:7px;
+      box-shadow:0 8px 24px rgba(16,24,40,.12);
+      max-height:320px;overflow:auto;z-index:50;display:none
+    }
+    .suggestion{padding:7px 9px;border-bottom:1px solid #edf0f3;cursor:pointer}
+    .suggestion:hover{background:#f0f5fb}
+    .st{font-weight:700;font-size:12px}
+    .ss{font-size:10.5px;color:var(--muted);margin-top:2px}
+    .selected{margin-top:6px;font-size:11px;color:#44505c;min-height:14px}
+    .selected strong{color:#1f2d3d}
+    #fieldsCard,#resultCard{display:none}
+    .fields{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+      gap:6px 7px
+    }
+    .field{min-width:0}
+    .field label{
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help
+    }
+    .field input{height:30px;font-size:12px;padding:4px 7px}
+    .actions{display:flex;gap:7px;align-items:center;margin-top:8px;flex-wrap:wrap}
+    button{
+      height:31px;border-radius:6px;border:1px solid transparent;padding:0 12px;
+      cursor:pointer;font-weight:700;font-size:12px
+    }
+    .primary{background:var(--accent);color:#fff}
+    .secondary{background:#fff;border-color:#cfd5dc;color:#39424e}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .status{font-size:11px;color:var(--muted);min-height:14px}
+    .status.error{color:var(--danger)}
+    #comment{
+      width:100%;min-height:110px;resize:vertical;border:1px solid #cfd5dc;
+      border-radius:7px;padding:9px;line-height:1.42;outline:none
+    }
+    .resultTop{display:flex;justify-content:flex-end;margin-bottom:5px}
+    .empty{font-size:11px;color:var(--muted)}
+    @media(max-width:650px){.top{grid-template-columns:1fr}.fields{grid-template-columns:1fr 1fr}}
+    @media(max-width:430px){.fields{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="top">
+      <div class="control">
+        <label for="ruleSearch">Medication or Sentri7 note</label>
+        <input id="ruleSearch" type="text" autocomplete="off"
+               placeholder="e.g., heparin, cefepime, vancomycin, IV to PO">
+        <div id="suggestions" class="suggestions"></div>
+      </div>
+
+      <div>
+        <label for="noteType">Type</label>
+        <select id="noteType" disabled>
+          <option value="">Select note first</option>
+        </select>
+      </div>
+    </div>
+    <div id="selectedRule" class="selected"></div>
+  </div>
+
+  <div id="fieldsCard" class="card">
+    <div id="fields" class="fields"></div>
+    <div id="emptyFields" class="empty" style="display:none"></div>
+
+    <div class="actions">
+      <button id="generateBtn" class="primary" disabled>Generate Comment</button>
+      <button id="clearBtn" class="secondary" type="button">Clear</button>
+      <span id="status" class="status"></span>
+    </div>
+  </div>
+
+  <div id="resultCard" class="card">
+    <div class="resultTop">
+      <button id="copyBtn" class="secondary" type="button">Copy</button>
+    </div>
+    <textarea id="comment" spellcheck="true"></textarea>
+  </div>
+</div>
+
+<script>
+  let catalog = [];
+  let selectedRuleId = '';
+
+  const ruleSearch = document.getElementById('ruleSearch');
+  const suggestions = document.getElementById('suggestions');
+  const noteType = document.getElementById('noteType');
+  const selectedRule = document.getElementById('selectedRule');
+  const fieldsCard = document.getElementById('fieldsCard');
+  const fields = document.getElementById('fields');
+  const emptyFields = document.getElementById('emptyFields');
+  const generateBtn = document.getElementById('generateBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const statusEl = document.getElementById('status');
+  const resultCard = document.getElementById('resultCard');
+  const comment = document.getElementById('comment');
+  const copyBtn = document.getElementById('copyBtn');
+
+  function init() {
+    setStatus('Loading rules...');
+    google.script.run
+      .withSuccessHandler(function(data) {
+        catalog = Array.isArray(data) ? data : [];
+        setStatus('');
+      })
+      .withFailureHandler(showError)
+      .getRuleCatalog();
+  }
+
+  function normalize(s) {
+    return String(s || '').toLowerCase().trim();
+  }
+
+  function scoreRule(rule, query) {
+    const q = normalize(query);
+    if (!q) return -1;
+
+    const title = normalize(rule.title);
+    const section = normalize(rule.section);
+    const all = normalize(rule.searchText);
+    const tokens = q.split(/\s+/).filter(Boolean);
+
+    let score = 0;
+    if (title === q) score += 300;
+    if (title.startsWith(q)) score += 170;
+    if (title.includes(q)) score += 120;
+    if (section.includes(q)) score += 35;
+    if (all.includes(q)) score += 50;
+
+    tokens.forEach(function(t) {
+      if (title.includes(t)) score += 35;
+      if (all.includes(t)) score += 9;
+    });
+
+    return score;
+  }
+
+  function showSuggestions() {
+    const q = ruleSearch.value.trim();
+
+    const matches = catalog
+      .map(function(r) { return {rule:r, score:scoreRule(r,q)}; })
+      .filter(function(x) { return x.score > 0; })
+      .sort(function(a,b) {
+        return b.score - a.score || a.rule.title.localeCompare(b.rule.title);
+      })
+      .slice(0,14)
+      .map(function(x) { return x.rule; });
+
+    suggestions.innerHTML = '';
+
+    if (!q || !matches.length) {
+      suggestions.style.display = 'none';
+      return;
+    }
+
+    matches.forEach(function(rule) {
+      const div = document.createElement('div');
+      div.className = 'suggestion';
+      div.innerHTML =
+        '<div class="st">' + escapeHtml(rule.title) + '</div>' +
+        '<div class="ss">' + escapeHtml(rule.section) + '</div>';
+
+      div.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        chooseRule(rule.id);
+      });
+
+      suggestions.appendChild(div);
+    });
+
+    suggestions.style.display = 'block';
+  }
+
+  function chooseRule(ruleId) {
+    const rule = catalog.find(function(r) { return r.id === ruleId; });
+    if (!rule) return;
+
+    selectedRuleId = ruleId;
+    ruleSearch.value = rule.title;
+    suggestions.style.display = 'none';
+
+    selectedRule.innerHTML =
+      '<strong>' + escapeHtml(rule.title) + '</strong> · ' +
+      escapeHtml(rule.section);
+
+    noteType.innerHTML = '';
+
+    (rule.types || []).forEach(function(type) {
+      const option = document.createElement('option');
+      option.value = type;
+      option.textContent = type;
+      noteType.appendChild(option);
+    });
+
+    noteType.disabled = !(rule.types && rule.types.length);
+
+    loadForm(
+      ruleId,
+      rule.types && rule.types.length ? rule.types[0] : ''
+    );
+  }
+
+  function loadForm(ruleId, type) {
+    setStatus('Loading required fields...');
+    generateBtn.disabled = true;
+
+    google.script.run
+      .withSuccessHandler(function(form) {
+        renderForm(form);
+        setStatus('');
+      })
+      .withFailureHandler(showError)
+      .getRuleForm(ruleId, type);
+  }
+
+  function renderForm(form) {
+    fields.innerHTML = '';
+    emptyFields.style.display = 'none';
+    fieldsCard.style.display = 'block';
+    resultCard.style.display = 'none';
+    comment.value = '';
+
+    noteType.innerHTML = '';
+
+    (form.availableTypes || []).forEach(function(type) {
+      const option = document.createElement('option');
+      option.value = type;
+      option.textContent = type;
+      option.selected = type === form.selectedType;
+      noteType.appendChild(option);
+    });
+
+    noteType.disabled = !(form.availableTypes || []).length;
+
+    const list = form.fields || [];
+
+    if (!list.length) {
+      emptyFields.textContent =
+        'No required data fields are listed for this pathway.';
+      emptyFields.style.display = 'block';
+    } else {
+      list.forEach(function(field, index) {
+        const wrap = document.createElement('div');
+        wrap.className = 'field';
+
+        const label = document.createElement('label');
+        label.htmlFor = 'field_' + index;
+        label.textContent = field.label;
+        label.title = field.label;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'field_' + index;
+        input.dataset.label = field.label;
+        input.placeholder = '[]';
+        input.autocomplete = 'off';
+
+        wrap.appendChild(label);
+        wrap.appendChild(input);
+        fields.appendChild(wrap);
+      });
+    }
+
+    generateBtn.disabled = false;
+  }
+
+  function collectFields() {
+    return Array.from(
+      fields.querySelectorAll('input[data-label]')
+    ).map(function(input) {
+      return {
+        label: input.dataset.label,
+        value: input.value.trim()
+      };
+    });
+  }
+
+  function generate() {
+    if (!selectedRuleId || !noteType.value) return;
+
+    generateBtn.disabled = true;
+    setStatus('Generating...');
+    resultCard.style.display = 'none';
+
+    const payload = {
+      ruleId: selectedRuleId,
+      noteType: noteType.value,
+      fields: collectFields()
+    };
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+        comment.value = result && result.comment
+          ? result.comment
+          : '';
+
+        resultCard.style.display = 'block';
+        setStatus('');
+        generateBtn.disabled = false;
+      })
+      .withFailureHandler(function(err) {
+        showError(err);
+        generateBtn.disabled = false;
+      })
+      .generateSentri7Comment(payload);
+  }
+
+  function clearAll() {
+    ruleSearch.value = '';
+    selectedRuleId = '';
+    selectedRule.innerHTML = '';
+    noteType.innerHTML =
+      '<option value="">Select note first</option>';
+    noteType.disabled = true;
+    fieldsCard.style.display = 'none';
+    resultCard.style.display = 'none';
+    comment.value = '';
+    setStatus('');
+    ruleSearch.focus();
+  }
+
+  function setStatus(message, isError) {
+    statusEl.textContent = message || '';
+    statusEl.className =
+      'status' + (isError ? ' error' : '');
+  }
+
+  function showError(err) {
+    setStatus(
+      err && err.message ? err.message : String(err),
+      true
+    );
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function(c) {
+      return {
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#039;'
+      }[c];
+    });
+  }
+
+  ruleSearch.addEventListener('input', function() {
+    if (selectedRuleId) {
+      const selected = catalog.find(function(r) {
+        return r.id === selectedRuleId;
+      });
+
+      if (!selected || ruleSearch.value.trim() !== selected.title) {
+        selectedRuleId = '';
+        selectedRule.innerHTML = '';
+        noteType.innerHTML =
+          '<option value="">Select note first</option>';
+        noteType.disabled = true;
+        fieldsCard.style.display = 'none';
+        resultCard.style.display = 'none';
+      }
+    }
+    showSuggestions();
+  });
+
+  ruleSearch.addEventListener('focus', showSuggestions);
+
+  ruleSearch.addEventListener('blur', function() {
+    setTimeout(function() {
+      suggestions.style.display = 'none';
+    }, 120);
+  });
+
+  noteType.addEventListener('change', function() {
+    if (selectedRuleId) {
+      loadForm(selectedRuleId, noteType.value);
+    }
+  });
+
+  generateBtn.addEventListener('click', generate);
+  clearBtn.addEventListener('click', clearAll);
+
+  copyBtn.addEventListener('click', async function() {
+    try {
+      await navigator.clipboard.writeText(comment.value);
+      copyBtn.textContent = 'Copied';
+      setTimeout(function() {
+        copyBtn.textContent = 'Copy';
+      }, 900);
+    } catch (e) {
+      comment.select();
+      document.execCommand('copy');
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
