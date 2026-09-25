@@ -10,7 +10,7 @@ GitHub Pages opens the current Google Apps Script web app directly.
 
 ## Current Apps Script backend
 
-`https://script.google.com/macros/s/AKfycbzFHzycCuJlcSDkzyBimPLzoDEY3mG6SVzecQuF3dfddcHG1P-SDZLhrfIdS1ZHuqKl/exec`
+`https://script.google.com/macros/s/AKfycbyV4h_fRinCEiODAQV7pem0Sfvfdv40hpKabl6SEcTI90h0tWzd2mz0bvJx5UDShy9m/exec`
 
 No Google Sheet is used.
 
