@@ -1,29 +1,53 @@
 # Sentri7 Note Generator
 
-A compact Google Apps Script web app for generating Sentri7 documentation comments from the clinical guidance templates used in this project.
+Compact Sentri7 documentation generator built from the supplied Sentri7 Clinical Guidance Excel workbook.
 
-## Current build
+## Architecture
 
-The repository includes the current compact app build as `Sentri7_Compact_Note_Generator.zip`.
+GitHub is now the source of truth for the application and Sentri7 rule library.
 
-The app workflow is:
-1. Search/select the medication or Sentri7 rule.
-2. Choose the applicable documentation pathway.
-3. Enter the required template fields.
-4. Generate the final Sentri7 comment.
-5. Gemini is used to clean grammar, spelling, and formatting while following the selected Excel-derived template and preserving missing information as `[]`.
+- `Index.html` — compact user interface
+- `Code.gs` — server-side Apps Script logic and Gemini call
+- `data/sentri7-rules.json` — the 89 Excel-derived Sentri7 rules, required fields, and example templates
+- `appsscript.json` — Apps Script manifest
 
-## Google Apps Script setup
+**Google Sheets is not used.**
+
+The app loads the Sentri7 rule library directly from this GitHub repository. Generated patient notes are returned to the browser and are not saved by the application.
+
+## Workflow
+
+1. Search for a medication or Sentri7 note.
+2. Select the exact Sentri7 rule.
+3. Select Intervene, Review Never, or Review for Follow Up when available.
+4. Complete the compact required fields from the Excel template.
+5. Gemini corrects spelling, grammar, punctuation, and formatting while following the selected Excel example.
+6. Missing required information stays visible as `[]`.
+7. Copy the final Sentri7 comment.
+
+## Google Apps Script deployment
+
+Apps Script is used only as the secure server-side runtime for the Gemini API key and to serve the web app. It does not use a Google Sheet.
 
 1. Create a Google Apps Script project.
-2. Add the included `Code.gs` and `Index.html` files from the ZIP.
+2. Copy `Code.gs`, `Index.html`, and `appsscript.json` from this repository.
 3. In **Project Settings → Script properties**, add:
    - `GEMINI_API_KEY` = your Gemini API key
-   - `GEMINI_MODEL` = optional model override
+   - `GEMINI_MODEL` = optional; defaults to `gemini-2.5-flash-lite`
 4. Deploy as a **Web app**.
 
-## Security
+## Updating Sentri7 guidance
 
-Do **not** commit a Gemini API key to this repository. Keep the key in Google Apps Script Script Properties.
+Edit `data/sentri7-rules.json` in GitHub. The deployed app reads its rule library from:
 
-> Clinical note output should be reviewed by the pharmacist before use.
+`https://raw.githubusercontent.com/a860h040/Sentri7-Note-Generator/main/data/sentri7-rules.json`
+
+The server temporarily caches rules for performance, but GitHub remains the source of truth.
+
+## Security and patient information
+
+This repository is public. **Never commit patient information, generated patient notes, passwords, or API keys to GitHub.**
+
+The Gemini API key must remain in Apps Script Script Properties. The application code does not persist the clinical fields or final comment.
+
+Clinical output should be reviewed by the pharmacist before use.
