@@ -1,46 +1,39 @@
 # Sentri7 Note Generator
 
-A compact Sentri7 documentation generator built from the supplied Sentri7 Clinical Guidance Excel workbook.
+A compact Sentri7 documentation generator based on the supplied Sentri7 Clinical Guidance Excel workbook.
 
 ## Live app
 
 https://a860h040.github.io/Sentri7-Note-Generator/
 
-## How it works
+## Current setup
 
-- Search for a medication or Sentri7 note.
-- Select the exact Sentri7 rule.
-- Select Intervene, Review Never, or Review for Follow Up when available.
-- Complete only the required fields from the Excel template.
-- Gemini corrects spelling, grammar, punctuation, and formatting while following the selected Excel example.
-- Missing required information stays visible as `[]`.
-- Copy the final Sentri7 comment.
+- GitHub Pages provides the easy-to-use public link.
+- The live Sentri7 app itself runs from this Google Apps Script deployment:
+  https://script.google.com/macros/s/AKfycbzFHzycCuJlcSDkzyBimPLzoDEY3mG6SVzecQuF3dfddcHG1P-SDZLhrfIdS1ZHuqKl/exec
+- No Google Sheet is used.
+- The Gemini API key remains stored in Apps Script Script Properties, not in GitHub.
 
-## Architecture
+## Workflow
 
-This version runs directly on **GitHub Pages**.
+1. Search for a medication or Sentri7 note.
+2. Select the exact Sentri7 rule.
+3. Select Intervene, Review Never, or Review for Follow Up when available.
+4. Complete the compact required fields from the Excel template.
+5. Gemini corrects grammar, spelling, punctuation, and formatting while following the selected Excel example.
+6. Missing required information remains visible as `[]`.
+7. Copy the final Sentri7 comment.
 
-- `index.html` — complete browser app
-- `data/sentri7-rules.json` — 89 Excel-derived Sentri7 rules, required fields, and examples
+## Sentri7 rule library
 
-There is **no Google Sheet** and **no Google Apps Script runtime**.
-
-On first use, the app asks for a Gemini API key. The key is stored only in that browser's local storage and is not committed to GitHub.
-
-## Updating Sentri7 guidance
-
-Edit:
+The Excel-derived rule library is stored in:
 
 `data/sentri7-rules.json`
 
-GitHub Pages automatically serves the updated rule library after the repository deploys.
-
 ## Security
 
-This repository is public. Never commit API keys, patient information, generated patient notes, or passwords.
+This repository is public. Never commit API keys, patient information, passwords, or generated notes to GitHub.
 
-The browser-saved API key can be removed using the **API Key** button in the live app.
-
-Only use patient-identifiable information if your organization has approved sending it to the Gemini API.
+Only use patient-identifiable information if your organization has approved sending it to the configured Gemini API.
 
 Clinical output should be reviewed by the pharmacist before use.
