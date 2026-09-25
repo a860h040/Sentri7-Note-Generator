@@ -1,82 +1,32 @@
-# Deploy the Sentri7 Note Generator
+# Sentri7 Note Generator
 
-## Recommended setup
+The app now runs directly from GitHub Pages.
 
-The project now uses:
-
-- **GitHub** for the source code and the 89-rule Sentri7 library.
-- **GitHub Pages** as the easy-to-remember launcher URL.
-- **Google Apps Script** only as the secure backend/web app that stores the Gemini API key.
-- **No Google Sheet.**
-
-Your GitHub Pages address is:
+Live app:
 
 `https://a860h040.github.io/Sentri7-Note-Generator/`
 
-## First-time setup
+## First use
 
-### 1. Deploy the Apps Script web app
+1. Open the live app.
+2. Paste your Gemini API key when prompted.
+3. The key is stored only in that browser's local storage.
+4. Search for a medication or Sentri7 rule, choose the note type, complete the required fields, and generate the final comment.
 
-Create or open the Apps Script project containing:
+## No Google Apps Script or Google Sheet
 
-- `Code.gs`
-- `Index.html`
-- `appsscript.json`
+This version does not use Google Apps Script and does not use Google Sheets.
 
-In **Project Settings → Script properties**, add:
-
-```
-GEMINI_API_KEY = your Gemini API key
-```
-
-Optional:
-
-```
-GEMINI_MODEL = gemini-2.5-flash-lite
-```
-
-Then use:
-
-**Deploy → New deployment → Web app**
-
-Recommended:
-
-- Execute as: **Me**
-- Who has access: **Anyone** or the narrowest option that works for your environment
-
-Copy the Web App URL ending in `/exec`.
-
-### 2. Open the GitHub Pages link
-
-Open:
-
-`https://a860h040.github.io/Sentri7-Note-Generator/`
-
-The first time, paste the Apps Script `/exec` URL into the connection box and click **Open App**.
-
-The browser saves that URL locally. On later visits, the GitHub Pages address opens the Sentri7 app automatically.
-
-Use **Change app URL** in the lower-right corner if the Apps Script deployment URL ever changes.
-
-## Why this setup
-
-The GitHub Pages address is easy to remember, while the Gemini API key remains server-side in Apps Script. The key is never committed to the public GitHub repository.
-
-## Sentri7 rule updates
-
-Edit:
+The Sentri7 rule library is stored in:
 
 `data/sentri7-rules.json`
 
-The Apps Script backend reads this rule library from GitHub. Changes to rule data do not require a Google Sheet.
+The page calls the Gemini API directly from the browser.
 
 ## Security
 
-Do not commit:
+The repository is public. Never commit API keys, patient information, or generated notes.
 
-- Gemini API keys
-- patient information
-- generated patient notes
-- passwords
+The saved Gemini key remains in the browser and can be removed with the **API Key** button in the lower-right corner.
 
-The application does not intentionally persist patient-entered fields or generated notes.
+Only use patient-identifiable information if your organization has approved sending it to the Gemini API.
