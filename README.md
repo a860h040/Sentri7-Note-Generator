@@ -10,7 +10,7 @@ https://a860h040.github.io/Sentri7-Note-Generator/
 
 - GitHub Pages provides the easy-to-use public link.
 - The live Sentri7 app itself runs from this Google Apps Script deployment:
-  https://script.google.com/macros/s/AKfycbzFHzycCuJlcSDkzyBimPLzoDEY3mG6SVzecQuF3dfddcHG1P-SDZLhrfIdS1ZHuqKl/exec
+  https://script.google.com/macros/s/AKfycbyV4h_fRinCEiODAQV7pem0Sfvfdv40hpKabl6SEcTI90h0tWzd2mz0bvJx5UDShy9m/exec
 - No Google Sheet is used.
 - The Gemini API key remains stored in Apps Script Script Properties, not in GitHub.
 
