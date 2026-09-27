@@ -152,6 +152,52 @@ function generateSentri7Comment(payload) {
   return { comment: comment };
 }
 
+
+function correctGrammar(text) {
+  const input = String(text || '').trim();
+
+  if (!input) {
+    throw new Error('Enter a sentence or paragraph to correct.');
+  }
+
+  const prompt = [
+    'You are a grammar and writing correction assistant.',
+    '',
+    'Correct the text below for:',
+    '- grammar',
+    '- spelling',
+    '- punctuation',
+    '- capitalization',
+    '- spacing',
+    '- sentence structure',
+    '- clarity and readability',
+    '',
+    'IMPORTANT RULES:',
+    '1. Preserve the original meaning.',
+    '2. Do not add new facts, recommendations, or clinical information.',
+    '3. Preserve medication names, doses, units, routes, frequencies, lab values, dates, names, and abbreviations unless there is an obvious spelling or formatting error.',
+    '4. Keep the tone professional and natural.',
+    '5. Do not explain the corrections.',
+    '6. Output ONLY the corrected text.',
+    '',
+    'TEXT TO CORRECT:',
+    input
+  ].join('\n');
+
+  let corrected = callGemini_(prompt).trim();
+
+  if (!corrected) {
+    throw new Error('Gemini returned an empty correction.');
+  }
+
+  corrected = corrected
+    .replace(/^\`\`\`(?:text)?\s*/i, '')
+    .replace(/\s*\`\`\`$/i, '')
+    .trim();
+
+  return { corrected: corrected };
+}
+
 function getRules_() {
   const cache = CacheService.getScriptCache();
   const cacheKey = 'sentri7_rules_v3';
