@@ -1,33 +1,31 @@
-# GitHub Pages Deployment
-
-The Sentri7 Note Generator now runs entirely from GitHub Pages.
+# Sentri7 Note Generator Deployment
 
 ## Live URL
 
-https://a860h040.github.io/Sentri7-Note-Generator/
+Use this as the normal app link:
 
-## Deployment
+`https://a860h040.github.io/Sentri7-Note-Generator/`
 
-GitHub Actions automatically deploys the repository whenever `main` changes.
+GitHub Pages opens the current Google Apps Script web app directly.
 
-Workflow:
+## Current Apps Script backend
 
-`.github/workflows/static.yml`
+`https://script.google.com/macros/s/AKfycbyV4h_fRinCEiODAQV7pem0Sfvfdv40hpKabl6SEcTI90h0tWzd2mz0bvJx5UDShy9m/exec`
 
-No Google Apps Script deployment is required.
+No Google Sheet is used.
 
 ## Gemini API key
 
-The API key is intentionally **not stored in GitHub**.
+Keep the Gemini API key only in:
 
-Open the live app, choose **Gemini API Key** from the sidebar, and paste the key once. It is stored only in that browser's local storage.
+**Apps Script → Project Settings → Script properties**
 
-If you change browsers or clear site data, enter the key again.
+Property:
 
-## Rules
+`GEMINI_API_KEY`
 
-Sentri7 rules are loaded directly from:
+Do not commit the key to GitHub.
 
-`data/sentri7-rules.json`
+## If the Apps Script deployment URL changes
 
-Changes to that file are deployed automatically through GitHub Pages.
+Update the iframe `src` in GitHub's lowercase `index.html` to the new `/exec` URL. GitHub Pages will redeploy automatically.
